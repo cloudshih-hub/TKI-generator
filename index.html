@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧教案產生器 - 翻轉教育</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 768px;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #a8e063, #56ab2f);
+            color: white;
+        }
+        input, select {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            transition: all 0.2s ease-in-out;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #56ab2f;
+            box-shadow: 0 0 0 2px rgba(86, 171, 47, 0.2);
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 lg:p-8 flex items-center justify-center min-h-screen">
+
+    <main class="w-full">
+        <div id="main-card" class="card p-6 sm:p-8 lg:p-10 transition-all duration-300">
+            <h1 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-2">智慧教案產生器</h1>
+            <p class="text-center text-sm sm:text-base text-gray-600 mb-8">親愛的老師，想為孩子們設計一堂因材施教的課程嗎？輸入幾個簡單的資訊，讓我們一起點亮教學靈感！</p>
+
+            <!-- 提案表單 -->
+            <form id="lessonPlanForm" class="space-y-6">
+                <div>
+                    <label for="subject" class="block text-sm font-medium text-gray-700 mb-1">學科</label>
+                    <select id="subject" class="mt-1 block w-full">
+                        <option value="">請選擇學科</option>
+                        <option value="國語">國語</option>
+                        <option value="數學">數學</option>
+                        <option value="自然">自然</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="grade" class="block text-sm font-medium text-gray-700 mb-1">年級</label>
+                    <select id="grade" class="mt-1 block w-full">
+                        <option value="">請選擇年級</option>
+                        <option value="國小一年級">國小一年級</option>
+                        <option value="國小二年級">國小二年級</option>
+                        <option value="國小三年級">國小三年級</option>
+                        <option value="國小四年級">國小四年級</option>
+                        <option value="國小五年級">國小五年級</option>
+                        <option value="國小六年級">國小六年級</option>
+                        <option value="國中一年級">國中一年級</option>
+                        <option value="國中二年級">國中二年級</option>
+                        <option value="國中三年級">國中三年級</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="topic" class="block text-sm font-medium text-gray-700 mb-1">單元主題</label>
+                    <input type="text" id="topic" placeholder="例：小數的加法與應用" class="mt-1 block w-full">
+                </div>
+                <div class="flex flex-col sm:flex-row space-y-6 sm:space-y-0 sm:space-x-4">
+                    <div class="flex-1">
+                        <label for="time" class="block text-sm font-medium text-gray-700 mb-1">預計教學時間</label>
+                        <input type="text" id="time" placeholder="例：40 分鐘" class="mt-1 block w-full">
+                    </div>
+                    <div class="flex-1">
+                        <label for="students" class="block text-sm font-medium text-gray-700 mb-1">班級人數</label>
+                        <input type="number" id="students" placeholder="例：25" class="mt-1 block w-full">
+                    </div>
+                </div>
+                <div class="text-center pt-4">
+                    <button type="submit" class="gradient-bg w-full py-3 rounded-full text-white font-bold text-lg hover:shadow-lg transition-transform transform hover:scale-105 active:scale-95">
+                        為我生成教案
+                    </button>
+                </div>
+            </form>
+
+            <!-- 載入中動畫 -->
+            <div id="loading" class="hidden text-center mt-8">
+                <div class="flex justify-center items-center">
+                    <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span class="text-gray-600">靈感生成中...</span>
+                </div>
+            </div>
+
+            <!-- 成果區 -->
+            <div id="result" class="hidden mt-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">您的教案靈感草稿</h2>
+                <div id="lessonPlanContent" class="space-y-6 text-gray-700">
+                    <!-- 教案內容會在這裡生成 -->
+                </div>
+                <div class="mt-8 text-center">
+                    <button onclick="copyToClipboard()" class="py-2 px-6 bg-gray-200 text-gray-800 rounded-full hover:bg-gray-300 transition-colors">
+                        複製內容
+                    </button>
+                    <button onclick="resetForm()" class="py-2 px-6 bg-gray-200 text-gray-800 rounded-full hover:bg-gray-300 transition-colors ml-4">
+                        重新來過
+                    </button>
+                    <div id="copy-message" class="mt-2 hidden text-sm text-green-600">內容已複製！</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const lessonPlans = {
+            '數學_國小四年級': {
+                content: `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2">💡 內容差異化建議</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>基礎版：提供包含個位數與小數點後一位的簡單加法練習題。</li>
+                        <li>進階版：設計需要找零、或結合多種商品購買情境的應用題。</li>
+                        <li>挑戰版：讓學習速度快的學生嘗試解讀小數與分數換算的謎題，或是設計自己的應用題來考驗同學。</li>
+                    </ul>
+                `,
+                process: `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🕹️ 過程差異化活動</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>個人練習區：提供不同難度的學習單，學生可依據自己的程度選擇。</li>
+                        <li>兩人一組的「購物遊戲」站：利用假想的商品目錄與金錢，讓學生模擬消費與加法計算。</li>
+                        <li>小組合作解題：由小老師帶領，針對特定難題進行討論與解說。</li>
+                    </ul>
+                `,
+                product: `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🎨 成果展現選項</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>完成學習單：老師可透過學習單快速掌握學生的學習狀況。</li>
+                        <li>上台報告：小組上台報告他們在「購物遊戲」中的購物清單與花費，分享解題策略。</li>
+                        <li>創意海報：設計一張以小數為主題的海報，介紹小數在生活中的應用。</li>
+                    </ul>
+                `,
+                environment: `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🏠 空間佈置參考</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>設置「挑戰區」、「合作區」、「安靜思考區」，讓學生依據活動需求自由移動。</li>
+                        <li>牆面可張貼小數點的正確位置提醒與生活中的小數應用圖片，營造學習氛圍。</li>
+                    </ul>
+                `
+            },
+            '國語_國小三年級': {
+                 content: `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2">💡 內容差異化建議</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>基礎版：提供課文重點句型填空、生字詞練習與造句。</li>
+                        <li>進階版：鼓勵學生閱讀相同主題的補充文章或繪本，並進行比較。</li>
+                        <li>挑戰版：設計短篇故事創作，要求學生運用本單元的生字詞與修辭法。</li>
+                    </ul>
+                `,
+                process: `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🕹️ 過程差異化活動</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>分組討論：針對課文的提問，讓學生在小組內發表想法。</li>
+                        <li>「生字詞尋寶遊戲」：將生字詞卡片藏在教室各處，讓學生分組尋找並造句。</li>
+                        <li>說故事時間：鼓勵學生上台分享他們創作的短篇故事。</li>
+                    </ul>
+                `,
+                product: `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🎨 成果展現選項</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>完成學習單或習作。</li>
+                        <li>小組故事劇場：將學生創作的故事改編成小劇場，並實際演出。</li>
+                        <li>繪本創作：學生可以自行設計繪本，將課文內容或延伸閱讀的啟發畫出來。</li>
+                    </ul>
+                `,
+                environment: `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🏠 空間佈置參考</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>佈置一面「閱讀角」，擺放本單元相關的書籍與繪本。</li>
+                        <li>將學生優秀的作品（如造句、海報）張貼在「作家牆」上，給予肯定與鼓勵。</li>
+                    </ul>
+                `
+            },
+            '自然_國中二年級': {
+                 content: `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2">💡 內容差異化建議</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>基礎版：提供光合作用反應式的拆解圖，並標註各項元素名稱。</li>
+                        <li>進階版：討論影響光合作用速率的環境因子，並設計實驗觀測。</li>
+                        <li>挑戰版：探討光合作用與溫室效應的關係，並發表對永續議題的看法。</li>
+                    </ul>
+                `,
+                process: `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🕹️ 過程差異化活動</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>分組操作實驗：利用水中植物觀察光合作用產生的氣泡。</li>
+                        <li>線上虛擬實驗：利用平板進行線上模擬實驗，觀察不同光照強度下的反應。</li>
+                        <li>專家訪談：學生分組訪問校園內的生物老師或園丁，瞭解植物照顧的專業知識。</li>
+                    </ul>
+                `,
+                product: `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🎨 成果展現選項</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>完成實驗報告書。</li>
+                        <li>製作概念圖或心智圖，視覺化光合作用的過程與關聯性。</li>
+                        <li>錄製教學影片：向同學解釋光合作用的原理，並分享實驗結果。</li>
+                    </ul>
+                `,
+                environment: `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🏠 空間佈置參考</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>在教室一角設置一個「植物觀察站」，擺放不同種類的植物供學生隨時觀察。</li>
+                        <li>將光合作用反應式放大張貼於牆面，並可讓學生用標籤貼紙標註各項要素。</li>
+                    </ul>
+                `
+            },
+            '國語_國小一年級': {
+                 content: `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2">💡 內容差異化建議</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>基礎版：提供生字詞卡片，讓學生練習筆順與發音。</li>
+                        <li>進階版：鼓勵學生看著圖畫，用本週學過的生字詞說一個簡短的故事。</li>
+                        <li>挑戰版：讓學習速度快的學生嘗試畫出家庭樹，並用學過的詞彙形容每個家庭成員。</li>
+                    </ul>
+                `,
+                process: `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🕹️ 過程差異化活動</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>個人練習區：提供描紅本，讓學生練習寫字。</li>
+                        <li>兩人一組的「猜猜看，誰是家人？」遊戲：學生用學過的詞彙描述一個家庭成員，讓對方猜是誰。</li>
+                        <li>全班活動：大家一起唱「我的家庭」歌曲，並將歌詞中的生字詞圈出來。</li>
+                    </ul>
+                `,
+                product: `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🎨 成果展現選項</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>完成學習單或習作。</li>
+                        <li>製作家庭成員小書：每頁畫上一個家庭成員，並用學過的字詞寫上名字或特徵。</li>
+                        <li>上台分享：鼓勵學生上台分享他們的小書，向大家介紹自己的家人。</li>
+                    </ul>
+                `,
+                environment: `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🏠 空間佈置參考</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>在教室一角佈置一個「家庭相簿牆」，展示學生製作的家庭成員小書或海報。</li>
+                        <li>在牆面張貼本單元的主題詞彙，讓學生隨時能看到。</li>
+                    </ul>
+                `
+            },
+            '自然_國中三年級': {
+                 content: `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2">💡 內容差異化建議</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>基礎版：提供電路元件與電路圖符號的對應圖表。</li>
+                        <li>進階版：講解電磁感應的基本原理與應用，並分析其與發電機的關係。</li>
+                        <li>挑戰版：鼓勵學生探討電磁學在未來科技（如磁浮列車、無線充電）中的應用，並發表看法。</li>
+                    </ul>
+                `,
+                process: `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🕹️ 過程差異化活動</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>分組實驗：透過小組合作，完成串聯與並聯電路實驗，並觀察燈泡亮度變化。</li>
+                        <li>虛擬實驗：使用線上模擬軟體，觀察電磁鐵磁力與電流、線圈匝數的關係。</li>
+                        <li>影片分析與討論：觀看發電機運作原理的動畫影片，並在小組內討論能量轉換的過程。</li>
+                    </ul>
+                `,
+                product: `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🎨 成果展現選項</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>完成實驗報告書，記錄實驗過程與結果。</li>
+                        <li>製作概念圖或心智圖，視覺化電與磁之間的關係與應用。</li>
+                        <li>自製教學影片：錄製一段簡短影片，向同學解釋電磁感應的原理。</li>
+                    </ul>
+                `,
+                environment: `
+                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🏠 空間佈置參考</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>設置「電路實驗區」，擺放實驗器材與安全規範提醒。</li>
+                        <li>牆面張貼科學家（如法拉第、安培）的介紹與電磁學發展的歷史圖。</li>
+                    </ul>
+                `
+            }
+        };
+
+        const fallbackPlan = {
+            content: `
+                <div class="p-6 bg-gray-50 border-l-4 border-gray-400 rounded-lg">
+                    <p class="text-sm italic text-gray-600">
+                        哎呀！我們目前還沒有針對這個主題的範例教案，但沒關係，這份工具的重點是激發靈感！您可以參考以下通用原則，將您的創意填入教案中喔！
+                    </p>
+                </div>
+            `,
+            process: `
+                <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🕹️ 過程差異化活動</h3>
+                <ul class="list-disc list-inside space-y-1 ml-4">
+                    <li>思考不同程度學生的學習方式，設計適合獨自作業、分組討論或動態體驗的活動。</li>
+                    <li>在教學活動中，給予學生選擇的機會，讓他們能主動參與。</li>
+                </ul>
+            `,
+            product: `
+                <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🎨 成果展現選項</h3>
+                <ul class="list-disc list-inside space-y-1 ml-4">
+                    <li>除了傳統的紙筆測驗，鼓勵學生用口頭報告、繪圖、或簡報來呈現學習成果。</li>
+                    <li>讓學生選擇他們最擅長的方式來表達，例如善於表達的學生可上台分享，喜歡寫作的學生可撰寫報告。</li>
+                </ul>
+            `,
+            environment: `
+                <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🏠 空間佈置參考</h3>
+                <ul class="list-disc list-inside space-y-1 ml-4">
+                    <li>教室空間的調整能大幅影響學習氛圍，例如將桌椅排成小組討論形式、或設置安靜的個人閱讀區。</li>
+                    <li>善用牆面空間，展示學習海報或學生作品，讓教室成為一個充滿靈感的學習環境。</li>
+                </ul>
+            `
+        };
+
+        document.getElementById('lessonPlanForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const subject = document.getElementById('subject').value;
+            const grade = document.getElementById('grade').value;
+            const topic = document.getElementById('topic').value;
+            const time = document.getElementById('time').value;
+            const students = document.getElementById('students').value;
+
+            const loadingDiv = document.getElementById('loading');
+            const resultDiv = document.getElementById('result');
+            const mainCard = document.getElementById('main-card');
+            const contentDiv = document.getElementById('lessonPlanContent');
+
+            loadingDiv.classList.remove('hidden');
+            resultDiv.classList.add('hidden');
+            
+            // 模擬 API 延遲
+            setTimeout(() => {
+                loadingDiv.classList.add('hidden');
+                resultDiv.classList.remove('hidden');
+                
+                const plan = generateLessonPlan(subject, grade, topic, time, students);
+                contentDiv.innerHTML = plan;
+
+                // 調整卡片大小以容納新內容
+                mainCard.style.maxWidth = '900px';
+            }, 1000);
+        });
+
+        function generateLessonPlan(subject, grade) {
+            const key = `${subject}_${grade}`;
+            const plan = lessonPlans[key] || fallbackPlan;
+            return `
+                <div class="space-y-6">
+                    ${plan.content}
+                    ${plan.process}
+                    ${plan.product}
+                    ${plan.environment}
+                </div>
+            `;
+        }
+
+        function copyToClipboard() {
+            const content = document.getElementById('lessonPlanContent').innerText;
+            if (content) {
+                // Check if the browser supports the new clipboard API
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(content).then(() => {
+                        showCopyMessage();
+                    }).catch(err => {
+                        console.error('無法複製內容: ', err);
+                        fallbackCopyText(content);
+                    });
+                } else {
+                    fallbackCopyText(content);
+                }
+            }
+        }
+
+        function fallbackCopyText(text) {
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = text;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            try {
+                document.execCommand('copy');
+                showCopyMessage();
+            } catch (err) {
+                console.error('Fallback: 無法複製內容', err);
+            }
+            document.body.removeChild(tempTextArea);
+        }
+
+        function showCopyMessage() {
+            const msg = document.getElementById('copy-message');
+            msg.classList.remove('hidden');
+            setTimeout(() => {
+                msg.classList.add('hidden');
+            }, 2000);
+        }
+
+        function resetForm() {
+            document.getElementById('lessonPlanForm').reset();
+            document.getElementById('result').classList.add('hidden');
+            document.getElementById('main-card').style.maxWidth = '768px';
+        }
+
+        document.getElementById('topic').focus();
+
+    </script>
+</body>
+</html>
+
