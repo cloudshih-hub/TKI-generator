@@ -1,2 +1,2 @@
-# lesson-plan-generator
-lesson-plan-generator
+# TKI-generator
+TKI-generator
