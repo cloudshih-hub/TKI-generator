@@ -35,20 +35,19 @@
             font-family: 'Noto Sans TC', sans-serif;
             background-color: var(--background-color);
             margin: 0;
-            /* 移除 body 的 padding 以解決在部分瀏覽器上可能出現的滾輪問題 */
-            padding: 0; 
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
             color: var(--text-color);
             -webkit-font-smoothing: antialiased;
+            /* 移除 min-height: 100vh; 以允許內容決定高度 */
             min-height: auto;
-            /* 移除 flex 佈局，改由 container 的 margin:auto 實現置中 */
         }
 
         .tool-container {
             width: 100%;
             max-width: 500px;
-            /* 使用 margin 來為內容提供外邊距，並實現水平置中 */
-            margin: 1rem auto;
-            box-sizing: border-box;
         }
 
         .tool-card {
@@ -101,6 +100,34 @@
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
+        }
+        
+        /* 更新下載按鈕樣式 */
+        #download-btn {
+            background-color: #e9ecef;
+            color: var(--brand-color);
+        }
+        #download-btn:hover {
+            box-shadow: 0 4px 10px rgba(0, 64, 152, 0.3);
+        }
+
+        /* 新增的資源連結樣式 */
+        .resource-link {
+            display: block;
+            margin-top: 1rem;
+            padding: 0.75rem 1rem;
+            background-color: #f0f4f7;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            color: var(--brand-color);
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .resource-link:hover {
+            background-color: #e6f0f7;
+            border-color: #d1e3f1;
+            transform: translateY(-2px);
         }
 
         /* --- Quiz Screen --- */
@@ -206,7 +233,6 @@
             gap: 0.75rem;
             margin-top: 1.5rem;
         }
-        #download-btn { background-color: var(--good-choice-border); }
         #restart-btn { background-color: #6c757d; }
 
         /* Footer */
@@ -405,7 +431,8 @@
                 desc: '重視個人目標的達成，果斷且不畏懼對抗，像貓頭鷹一樣精準地朝目標前進。',
                 strength: '在需要快速決策、執行重要原則或保護學生權益時，這種風格非常有效率，能迅速穩定局面。',
                 blindspot: '在人際關係中，可能會因為過於堅持己見，而忽略他人感受，讓對方感到壓力或不被尊重。',
-                suggestion: '練習在堅持原則的同時，加入更多「我訊息」的表達，並適時傾聽對方的想法，讓決策更有溫度。'
+                suggestion: '練習在堅持原則的同時，加入更多「我訊息」的表達，並適時傾聽對方的想法，讓決策更有溫度。',
+                resource: { text: '「我訊息」這樣用才不會變情勒！破解3大誤區', url: 'https://flipedu.parenting.com.tw/article/009595' }
             },
             collaborating: {  
                 name: '合作型 (海豚) 🐬',  
@@ -413,7 +440,8 @@
                 desc: '同時重視目標與關係，致力於尋找雙贏的創意解方，如同聰明合作的海豚，共創最大效益。',
                 strength: '能有效處理複雜問題，深化親師生間的信任感。透過整合多方觀點，能產出最有品質的決策。',
                 blindspot: '耗時耗力，並非所有衝突都值得投入如此高的心力。有時在小事上過度追求完美合作，反而會降低效率。',
-                suggestion: '學習判斷議題的重要性。將合作心力用在關鍵的、長期的議題上。在較緊急或次要的問題上，可嘗試「妥協」或「競爭」模式。'
+                suggestion: '學習判斷議題的重要性。將合作心力用在關鍵的、長期的議題上。在較緊急或次要的問題上，可嘗試「妥協」或「競爭」模式。',
+                resource: { text: '親師溝通100+提問集：多情境實用問題，建立信任與合作關係', url: 'https://flipedu.parenting.com.tw/teacher_resource/529' }
             },
             compromising: {  
                 name: '妥協型 (狐狸) 🦊',  
@@ -421,7 +449,8 @@
                 desc: '願意各退一步，尋求快速且雙方都能接受的折衷方案，像狐狸一樣務實且靈活。',
                 strength: '處理中度重要的議題時非常有效率，能快速解決僵局，讓事情繼續前進，是維持團隊運作的潤滑劑。',
                 blindspot: '有時妥協的結果並非「最好」的方案，只是「最不差」的。長期下來，可能導致雙方都沒有真正滿意。',
-                suggestion: '在尋求妥協時，多問一句：「這個方案，我們雙方真的都能接受嗎？或只是暫時應付？」確保妥協的品質。'
+                suggestion: '在尋求妥協時，多問一句：「這個方案，我們雙方真的都能接受嗎？或只是暫時應付？」確保妥協的品質。',
+                resource: { text: '親師溝通問答集：聯絡簿&Line回應範本、家長疑難雜症QA', url: 'https://flipedu.parenting.com.tw/teacher_resource/240' }
             },
             avoiding: {  
                 name: '迴避型 (烏龜) 🐢',  
@@ -429,7 +458,8 @@
                 desc: '選擇暫時不處理衝突，將自己縮進殼裡，以降低緊張關係或爭取思考時間。',
                 strength: '面對無關緊要的小事，或在情緒高度緊張的當下，暫時迴避是冷卻局勢的智慧，能避免說出後悔的話。',
                 blindspot: '若長期迴避重要問題，問題不僅不會消失，還可能惡化，並可能讓他人覺得您不在乎或缺乏擔當。',
-                suggestion: '練習區分「策略性迴避」與「習慣性逃避」。若選擇迴避，可以告訴自己：「我只是『現在』不處理，等我準備好，我會回頭面對它。」'
+                suggestion: '練習區分「策略性迴避」與「習慣性逃避」。若選擇迴避，可以告訴自己：「我只是『現在』不處理，等我準備好，我會回頭面對它。」',
+                resource: { text: '學生罵髒話怎麼辦？老師回應的4步驟3心法', url: 'https://flipedu.parenting.com.tw/article/007178' }
             },
             accommodating: {  
                 name: '適應型 (泰迪熊) 🐻',  
@@ -437,7 +467,8 @@
                 desc: '優先考慮對方需求與關係和諧，願意犧牲自己的目標，像溫暖的泰迪熊一樣，給予支持與安撫。',
                 strength: '當議題對對方遠比對自己重要時，或當您需要為關係「儲值」時，這是一種維持和諧的大度表現。',
                 blindspot: '長期忽略自身需求，可能會感到委屈或被利用。您的善意也可能被視為理所當然。',
-                suggestion: '在退讓的同時，練習溫和地表達自己的感受與底線。例如：「這次我可以配合你，但也希望下次能聽聽我的想法。」'
+                suggestion: '在退讓的同時，練習溫和地表達自己的感受與底線。例如：「這次我可以配合你，但也希望下次能聽聽我的想法。」',
+                resource: { text: '壓力大不硬撐！6方法幫助老師不內耗，維持教學續航力', url: 'https://flipedu.parenting.com.tw/article/010088' }
             }
         };
 
@@ -603,7 +634,10 @@
                         <p><strong>風格描述：</strong>${info.desc}</p>
                         <p><strong>在教學現場的優勢：</strong>${info.strength}</p>
                         <p><strong>需要留意的盲點：</strong>${info.blindspot}</p>
-                        <p><strong>給您的行動建議：：</strong>${info.suggestion}</p>
+                        <p><strong>給您的行動建議：</strong>${info.suggestion}</p>
+                        <a href="${info.resource.url}" target="_blank" class="resource-link">
+                            推薦閱讀：${info.resource.text}
+                        </a>
                     </div>
                 `;
                 resultsElements.accordion.appendChild(item);
