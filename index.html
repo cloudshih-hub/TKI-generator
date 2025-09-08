@@ -1,417 +1,662 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>智慧教案產生器 - 翻轉教育</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>翻轉教育 衝突管理風格測驗</title>
+    <!-- 引入 Google Fonts Noto Sans TC -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- 引入 Chart.js 函式庫，用於繪製雷達圖 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 引入 html2canvas 函式庫，用於截圖下載 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" xintegrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoVBL5gI9kLmbG4dGGBLezZg+VwbQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
+        :root {
+            --brand-color: #004098;
+            --secondary-color: #4a90e2;
+            --background-color: #f8f9fa;
+            --card-background: #ffffff;
+            --text-color: #212529;
+            --light-text-color: #495057;
+            --border-color: #dee2e6;
+            --accent-color-1: #e6f4ea; /* 合作 */
+            --accent-color-2: #fff8e1; /* 妥協 */
+            --accent-color-3: #fbe9e7; /* 競爭 */
+            --accent-color-4: #e3f2fd; /* 迴避 */
+            --accent-color-5: #f3e5f5; /* 適應 */
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        html { scroll-behavior: smooth; }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f7f9fb;
-            color: #333;
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            color: var(--text-color);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .tool-container {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .tool-card {
+            background-color: var(--card-background);
+            border-radius: 16px;
+            padding: 1.5rem 1.75rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            margin-bottom: 1.5rem;
+        }
+
+        .hidden {
+            display: none;
+            opacity: 0;
+        }
+        .visible {
+            display: block;
+            opacity: 1;
+        }
+        
+        h1, h2, h3 { color: var(--brand-color); font-weight: 700; }
+        h1 { font-size: 1.75rem; text-align: center; margin: 0 0 0.5rem; }
+        h2 { font-size: 1.5rem; text-align: center; margin: 0 0 1.5rem; }
+        h3 { font-size: 1.2rem; margin: 0 0 0.75rem; border-left: 4px solid var(--secondary-color); padding-left: 0.75rem; }
+
+        p { line-height: 1.8; color: var(--light-text-color); }
+        .text-center { text-align: center; }
+
+        button {
+            font-family: 'Noto Sans TC', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 12px;
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            background-color: var(--brand-color);
+            color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 64, 152, 0.3);
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* --- Quiz Screen --- */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        #progress-indicator {
+            width: 0%;
+            height: 100%;
+            background-color: var(--secondary-color);
+            transition: width 0.3s ease;
+        }
+        .question-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .option-label {
+            display: block;
+            background: #fff;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .option-label:hover {
+            border-color: var(--secondary-color);
+            background-color: #f8f9fa;
+        }
+        .option-label input { display: none; }
+        .option-label input:checked + span { font-weight: 700; color: var(--brand-color); }
+        .option-label input:checked + span::before {
+            border-color: var(--brand-color);
+            background-color: var(--brand-color);
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='white'%3e%3cpath d='M12.736 3.97a.75.75 0 0 1 1.047 1.078l-7.25 7.5a.75.75 0 0 1-1.065.027L2.22 8.354a.75.75 0 1 1 1.06-1.06l2.724 2.882L12.736 3.97z'/%3e%3c/svg%3e");
+        }
+        .option-label span {
+            display: flex;
+            align-items: center;
             line-height: 1.6;
         }
-        .container {
-            max-width: 768px;
+        .option-label span::before {
+            content: "";
+            width: 1.25em;
+            height: 1.25em;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            margin-right: 0.75rem;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
         }
-        .card {
-            background-color: #ffffff;
-            border-radius: 1rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 10px 15px rgba(0, 0, 0, 0.1);
+        .quiz-nav { margin-top: 1.5rem; }
+
+        /* --- Results Screen --- */
+        #results-summary { text-align: center; margin-bottom: 2rem; }
+        #chart-container { margin: 1.5rem 0; }
+        .accordion-item {
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            overflow: hidden;
         }
-        .gradient-bg {
-            background: linear-gradient(135deg, #a8e063, #56ab2f);
-            color: white;
+        .accordion-header {
+            padding: 1rem 1.25rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            font-size: 1.1rem;
         }
-        input, select {
-            border: 1px solid #e2e8f0;
-            border-radius: 0.5rem;
-            padding: 0.75rem;
-            transition: all 0.2s ease-in-out;
+        .accordion-header::after {
+            content: '＋';
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
         }
-        input:focus, select:focus {
-            outline: none;
-            border-color: #56ab2f;
-            box-shadow: 0 0 0 2px rgba(86, 171, 47, 0.2);
+        .accordion-item.active .accordion-header::after {
+            transform: rotate(45deg);
         }
+        .accordion-content {
+            padding: 0 1.25rem 1.25rem;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out, padding 0.4s ease-out;
+        }
+        .accordion-content p { margin-bottom: 0.5rem; }
+        .accordion-content strong { color: var(--text-color); }
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+        #download-btn { background-color: var(--good-choice-border); }
+        #restart-btn { background-color: #6c757d; }
+
+        /* Footer */
+        .brand-footer {
+            text-align: center; margin-top: 0; font-size: 0.9em; color: #adb5bd;
+        }
+        .brand-footer a { color: var(--brand-color); text-decoration: none; font-weight: 500; }
     </style>
 </head>
-<body class="p-4 sm:p-6 lg:p-8 flex items-center justify-center min-h-screen">
+<body>
+    <div class="tool-container">
+        <!-- Screen 1: Welcome -->
+        <div id="welcome-screen" class="tool-card visible">
+            <h1>我的衝突管理風格</h1>
+            <h2 style="font-size: 1.2rem; color: var(--light-text-color);">TKI 測驗與個人化建議</h2>
+            <p class="text-center">面對校園中的各種溝通挑戰，您習慣如何應對？<br>透過 10 個情境題，深入了解自己的衝突管理風格，找到最適合您的溝通策略。</p>
+            <button id="start-btn">開始測驗</button>
+        </div>
 
-    <main class="w-full">
-        <div id="main-card" class="card p-6 sm:p-8 lg:p-10 transition-all duration-300">
-            <h1 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-2">智慧教案產生器</h1>
-            <p class="text-center text-sm sm:text-base text-gray-600 mb-8">親愛的老師，想為孩子們設計一堂因材施教的課程嗎？輸入幾個簡單的資訊，讓我們一起點亮教學靈感！</p>
-
-            <!-- 提案表單 -->
-            <form id="lessonPlanForm" class="space-y-6">
-                <div>
-                    <label for="subject" class="block text-sm font-medium text-gray-700 mb-1">學科</label>
-                    <select id="subject" class="mt-1 block w-full">
-                        <option value="">請選擇學科</option>
-                        <option value="國語">國語</option>
-                        <option value="數學">數學</option>
-                        <option value="自然">自然</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="grade" class="block text-sm font-medium text-gray-700 mb-1">年級</label>
-                    <select id="grade" class="mt-1 block w-full">
-                        <option value="">請選擇年級</option>
-                        <option value="國小一年級">國小一年級</option>
-                        <option value="國小二年級">國小二年級</option>
-                        <option value="國小三年級">國小三年級</option>
-                        <option value="國小四年級">國小四年級</option>
-                        <option value="國小五年級">國小五年級</option>
-                        <option value="國小六年級">國小六年級</option>
-                        <option value="國中一年級">國中一年級</option>
-                        <option value="國中二年級">國中二年級</option>
-                        <option value="國中三年級">國中三年級</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="topic" class="block text-sm font-medium text-gray-700 mb-1">單元主題</label>
-                    <input type="text" id="topic" placeholder="例：小數的加法與應用" class="mt-1 block w-full">
-                </div>
-                <div class="flex flex-col sm:flex-row space-y-6 sm:space-y-0 sm:space-x-4">
-                    <div class="flex-1">
-                        <label for="time" class="block text-sm font-medium text-gray-700 mb-1">預計教學時間</label>
-                        <input type="text" id="time" placeholder="例：40 分鐘" class="mt-1 block w-full">
-                    </div>
-                    <div class="flex-1">
-                        <label for="students" class="block text-sm font-medium text-gray-700 mb-1">班級人數</label>
-                        <input type="number" id="students" placeholder="例：25" class="mt-1 block w-full">
-                    </div>
-                </div>
-                <div class="text-center pt-4">
-                    <button type="submit" class="gradient-bg w-full py-3 rounded-full text-white font-bold text-lg hover:shadow-lg transition-transform transform hover:scale-105 active:scale-95">
-                        為我生成教案
-                    </button>
-                </div>
-            </form>
-
-            <!-- 載入中動畫 -->
-            <div id="loading" class="hidden text-center mt-8">
-                <div class="flex justify-center items-center">
-                    <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span class="text-gray-600">靈感生成中...</span>
-                </div>
-            </div>
-
-            <!-- 成果區 -->
-            <div id="result" class="hidden mt-8">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">您的教案靈感草稿</h2>
-                <div id="lessonPlanContent" class="space-y-6 text-gray-700">
-                    <!-- 教案內容會在這裡生成 -->
-                </div>
-                <div class="mt-8 text-center">
-                    <button onclick="copyToClipboard()" class="py-2 px-6 bg-gray-200 text-gray-800 rounded-full hover:bg-gray-300 transition-colors">
-                        複製內容
-                    </button>
-                    <button onclick="resetForm()" class="py-2 px-6 bg-gray-200 text-gray-800 rounded-full hover:bg-gray-300 transition-colors ml-4">
-                        重新來過
-                    </button>
-                    <div id="copy-message" class="mt-2 hidden text-sm text-green-600">內容已複製！</div>
-                </div>
+        <!-- Screen 2: Quiz -->
+        <div id="quiz-screen" class="tool-card hidden">
+            <div class="progress-bar"><div id="progress-indicator"></div></div>
+            <p id="question-number" style="text-align: right; color: var(--light-text-color); margin-bottom: 0.5rem;"></p>
+            <p id="question-text" class="question-text"></p>
+            <div id="options-container" class="options-container"></div>
+            <div class="quiz-nav">
+                <button id="next-btn" disabled>下一題</button>
             </div>
         </div>
-    </main>
+
+        <!-- Screen 3: Results -->
+        <div id="results-screen" class="tool-card hidden">
+            <div id="results-content-to-download">
+                <h1>測驗結果分析</h1>
+                <div id="results-summary"></div>
+                <div id="chart-container">
+                    <canvas id="results-chart"></canvas>
+                </div>
+                <h3>各風格深度解析</h3>
+                <div id="accordion-container"></div>
+            </div>
+            <div class="action-buttons">
+                <button id="download-btn">下載我的風格分析圖</button>
+                <button id="restart-btn">重新測驗</button>
+            </div>
+        </div>
+
+        <footer class="brand-footer">
+            <p>由 <a href="https://flipedu.parenting.com.tw/" target="_blank" rel="noopener noreferrer">翻轉教育</a> 溫暖提供</p>
+        </footer>
+    </div>
 
     <script>
-        const lessonPlans = {
-            '數學_國小四年級': {
-                content: `
-                    <h3 class="font-bold text-lg text-gray-800 mb-2">💡 內容差異化建議</h3>
-                    <ul class="list-disc list-inside space-y-1 ml-4">
-                        <li>基礎版：提供包含個位數與小數點後一位的簡單加法練習題。</li>
-                        <li>進階版：設計需要找零、或結合多種商品購買情境的應用題。</li>
-                        <li>挑戰版：讓學習速度快的學生嘗試解讀小數與分數換算的謎題，或是設計自己的應用題來考驗同學。</li>
-                    </ul>
-                `,
-                process: `
-                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🕹️ 過程差異化活動</h3>
-                    <ul class="list-disc list-inside space-y-1 ml-4">
-                        <li>個人練習區：提供不同難度的學習單，學生可依據自己的程度選擇。</li>
-                        <li>兩人一組的「購物遊戲」站：利用假想的商品目錄與金錢，讓學生模擬消費與加法計算。</li>
-                        <li>小組合作解題：由小老師帶領，針對特定難題進行討論與解說。</li>
-                    </ul>
-                `,
-                product: `
-                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🎨 成果展現選項</h3>
-                    <ul class="list-disc list-inside space-y-1 ml-4">
-                        <li>完成學習單：老師可透過學習單快速掌握學生的學習狀況。</li>
-                        <li>上台報告：小組上台報告他們在「購物遊戲」中的購物清單與花費，分享解題策略。</li>
-                        <li>創意海報：設計一張以小數為主題的海報，介紹小數在生活中的應用。</li>
-                    </ul>
-                `,
-                environment: `
-                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🏠 空間佈置參考</h3>
-                    <ul class="list-disc list-inside space-y-1 ml-4">
-                        <li>設置「挑戰區」、「合作區」、「安靜思考區」，讓學生依據活動需求自由移動。</li>
-                        <li>牆面可張貼小數點的正確位置提醒與生活中的小數應用圖片，營造學習氛圍。</li>
-                    </ul>
-                `
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- 元素宣告 ---
+        const screens = {
+            welcome: document.getElementById('welcome-screen'),
+            quiz: document.getElementById('quiz-screen'),
+            results: document.getElementById('results-screen')
+        };
+        const buttons = {
+            start: document.getElementById('start-btn'),
+            next: document.getElementById('next-btn'),
+            download: document.getElementById('download-btn'),
+            restart: document.getElementById('restart-btn')
+        };
+        const quizElements = {
+            progress: document.getElementById('progress-indicator'),
+            qNumber: document.getElementById('question-number'),
+            qText: document.getElementById('question-text'),
+            options: document.getElementById('options-container')
+        };
+        const resultsElements = {
+            summary: document.getElementById('results-summary'),
+            chartCanvas: document.getElementById('results-chart'),
+            accordion: document.getElementById('accordion-container')
+        };
+        let myChart;
+
+        // --- 資料庫 ---
+        const styles = {
+            competing: '競爭型',
+            collaborating: '合作型',
+            compromising: '妥協型',
+            avoiding: '迴避型',
+            accommodating: '適應型'
+        };
+
+        const questions = [
+            {
+                text: "當一位家長在聯絡簿上，強烈質疑您的評分標準時，您傾向...",
+                options: [
+                    { text: "堅持自己的專業判斷，並向家長清楚說明評分標準的公正性。", style: "competing" },
+                    { text: "邀請家長到校詳談，一起找出對孩子學習最有幫助的方式，並願意調整作法。", style: "collaborating" },
+                    { text: "同意在這次的成績上做些微調整，以安撫家長，但下次會將規則說得更清楚。", style: "compromising" },
+                    { text: "先不直接回應質疑，找時間與其他同事討論，看看大家通常如何處理。", style: "avoiding" },
+                    { text: "理解家長愛子心切，優先安撫家長情緒，表示會重新審視孩子的考卷。", style: "accommodating" }
+                ]
             },
-            '國語_國小三年級': {
-                 content: `
-                    <h3 class="font-bold text-lg text-gray-800 mb-2">💡 內容差異化建議</h3>
-                    <ul class="list-disc list-inside space-y-1 ml-4">
-                        <li>基礎版：提供課文重點句型填空、生字詞練習與造句。</li>
-                        <li>進階版：鼓勵學生閱讀相同主題的補充文章或繪本，並進行比較。</li>
-                        <li>挑戰版：設計短篇故事創作，要求學生運用本單元的生字詞與修辭法。</li>
-                    </ul>
-                `,
-                process: `
-                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🕹️ 過程差異化活動</h3>
-                    <ul class="list-disc list-inside space-y-1 ml-4">
-                        <li>分組討論：針對課文的提問，讓學生在小組內發表想法。</li>
-                        <li>「生字詞尋寶遊戲」：將生字詞卡片藏在教室各處，讓學生分組尋找並造句。</li>
-                        <li>說故事時間：鼓勵學生上台分享他們創作的短篇故事。</li>
-                    </ul>
-                `,
-                product: `
-                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🎨 成果展現選項</h3>
-                    <ul class="list-disc list-inside space-y-1 ml-4">
-                        <li>完成學習單或習作。</li>
-                        <li>小組故事劇場：將學生創作的故事改編成小劇場，並實際演出。</li>
-                        <li>繪本創作：學生可以自行設計繪本，將課文內容或延伸閱讀的啟發畫出來。</li>
-                    </ul>
-                `,
-                environment: `
-                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🏠 空間佈置參考</h3>
-                    <ul class="list-disc list-inside space-y-1 ml-4">
-                        <li>佈置一面「閱讀角」，擺放本單元相關的書籍與繪本。</li>
-                        <li>將學生優秀的作品（如造句、海報）張貼在「作家牆」上，給予肯定與鼓勵。</li>
-                    </ul>
-                `
+            {
+                text: "班上兩位學生為了打掃工作分配不均而吵架，您介入時會...",
+                options: [
+                    { text: "直接做出裁決，明確劃分兩人的工作範圍，要求雙方遵守。", style: "competing" },
+                    { text: "花時間與兩位學生對談，引導他們說出各自的想法，共同找出一個兩人都滿意的分配方式。", style: "collaborating" },
+                    { text: "建議兩人各退一步，這次的工作一人一半，下次再換。", style: "compromising" },
+                    { text: "告訴他們先冷靜一下，這不是什麼大事，等情緒好了再說。", style: "avoiding" },
+                    { text: "先安撫情緒較激動的一方，答應會幫他多分擔一些工作，讓事情盡快平息。", style: "accommodating" }
+                ]
             },
-            '自然_國中二年級': {
-                 content: `
-                    <h3 class="font-bold text-lg text-gray-800 mb-2">💡 內容差異化建議</h3>
-                    <ul class="list-disc list-inside space-y-1 ml-4">
-                        <li>基礎版：提供光合作用反應式的拆解圖，並標註各項元素名稱。</li>
-                        <li>進階版：討論影響光合作用速率的環境因子，並設計實驗觀測。</li>
-                        <li>挑戰版：探討光合作用與溫室效應的關係，並發表對永續議題的看法。</li>
-                    </ul>
-                `,
-                process: `
-                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🕹️ 過程差異化活動</h3>
-                    <ul class="list-disc list-inside space-y-1 ml-4">
-                        <li>分組操作實驗：利用水中植物觀察光合作用產生的氣泡。</li>
-                        <li>線上虛擬實驗：利用平板進行線上模擬實驗，觀察不同光照強度下的反應。</li>
-                        <li>專家訪談：學生分組訪問校園內的生物老師或園丁，瞭解植物照顧的專業知識。</li>
-                    </ul>
-                `,
-                product: `
-                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🎨 成果展現選項</h3>
-                    <ul class="list-disc list-inside space-y-1 ml-4">
-                        <li>完成實驗報告書。</li>
-                        <li>製作概念圖或心智圖，視覺化光合作用的過程與關聯性。</li>
-                        <li>錄製教學影片：向同學解釋光合作用的原理，並分享實驗結果。</li>
-                    </ul>
-                `,
-                environment: `
-                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🏠 空間佈置參考</h3>
-                    <ul class="list-disc list-inside space-y-1 ml-4">
-                        <li>在教室一角設置一個「植物觀察站」，擺放不同種類的植物供學生隨時觀察。</li>
-                        <li>將光合作用反應式放大張貼於牆面，並可讓學生用標籤貼紙標註各項要素。</li>
-                    </ul>
-                `
+            {
+                text: "在科任會議上，您和一位資深同事對於教學進度的看法不同，您會...",
+                options: [
+                    { text: "據理力爭，提出數據和案例來證明自己的方案更有效率。", style: "competing" },
+                    { text: "提議將兩種方案的優點結合，創造一個全新的、對雙方都有利的教學計畫。", style: "collaborating" },
+                    { text: "提出折衷方案，例如「上半學期照您的進度，下半學期試試我的方式」。", style: "compromising" },
+                    { text: "認為和諧比爭執重要，暫時不堅持己見，讓會議順利進行下去。", style: "avoiding" },
+                    { text: "尊重前輩的經驗，選擇支持同事的看法，並表示願意全力配合。", style: "accommodating" }
+                ]
             },
-            '國語_國小一年級': {
-                 content: `
-                    <h3 class="font-bold text-lg text-gray-800 mb-2">💡 內容差異化建議</h3>
-                    <ul class="list-disc list-inside space-y-1 ml-4">
-                        <li>基礎版：提供生字詞卡片，讓學生練習筆順與發音。</li>
-                        <li>進階版：鼓勵學生看著圖畫，用本週學過的生字詞說一個簡短的故事。</li>
-                        <li>挑戰版：讓學習速度快的學生嘗試畫出家庭樹，並用學過的詞彙形容每個家庭成員。</li>
-                    </ul>
-                `,
-                process: `
-                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🕹️ 過程差異化活動</h3>
-                    <ul class="list-disc list-inside space-y-1 ml-4">
-                        <li>個人練習區：提供描紅本，讓學生練習寫字。</li>
-                        <li>兩人一組的「猜猜看，誰是家人？」遊戲：學生用學過的詞彙描述一個家庭成員，讓對方猜是誰。</li>
-                        <li>全班活動：大家一起唱「我的家庭」歌曲，並將歌詞中的生字詞圈出來。</li>
-                    </ul>
-                `,
-                product: `
-                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🎨 成果展現選項</h3>
-                    <ul class="list-disc list-inside space-y-1 ml-4">
-                        <li>完成學習單或習作。</li>
-                        <li>製作家庭成員小書：每頁畫上一個家庭成員，並用學過的字詞寫上名字或特徵。</li>
-                        <li>上台分享：鼓勵學生上台分享他們的小書，向大家介紹自己的家人。</li>
-                    </ul>
-                `,
-                environment: `
-                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🏠 空間佈置參考</h3>
-                    <ul class="list-disc list-inside space-y-1 ml-4">
-                        <li>在教室一角佈置一個「家庭相簿牆」，展示學生製作的家庭成員小書或海報。</li>
-                        <li>在牆面張貼本單元的主題詞彙，讓學生隨時能看到。</li>
-                    </ul>
-                `
+            {
+                text: "校慶活動分工繁重，有位同事明顯在推卸責任，您會...",
+                options: [
+                    { text: "直接找那位同事溝通，明確指出他需要完成的部分，要求他負起責任。", style: "competing" },
+                    { text: "找那位同事和其他組員一起開會，重新討論大家都能接受且公平的分工方式。", style: "collaborating" },
+                    { text: "自己多做一點，但也跟對方協商，請他至少幫忙完成其中最簡單的部分。", style: "compromising" },
+                    { text: "覺得不想為了這件事傷和氣，自己默默把事情做完就算了。", style: "avoiding" },
+                    { text: "擔心對方有難處，主動表示願意幫他分擔，希望團隊活動能順利。", style: "accommodating" }
+                ]
             },
-            '自然_國中三年級': {
-                 content: `
-                    <h3 class="font-bold text-lg text-gray-800 mb-2">💡 內容差異化建議</h3>
-                    <ul class="list-disc list-inside space-y-1 ml-4">
-                        <li>基礎版：提供電路元件與電路圖符號的對應圖表。</li>
-                        <li>進階版：講解電磁感應的基本原理與應用，並分析其與發電機的關係。</li>
-                        <li>挑戰版：鼓勵學生探討電磁學在未來科技（如磁浮列車、無線充電）中的應用，並發表看法。</li>
-                    </ul>
-                `,
-                process: `
-                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🕹️ 過程差異化活動</h3>
-                    <ul class="list-disc list-inside space-y-1 ml-4">
-                        <li>分組實驗：透過小組合作，完成串聯與並聯電路實驗，並觀察燈泡亮度變化。</li>
-                        <li>虛擬實驗：使用線上模擬軟體，觀察電磁鐵磁力與電流、線圈匝數的關係。</li>
-                        <li>影片分析與討論：觀看發電機運作原理的動畫影片，並在小組內討論能量轉換的過程。</li>
-                    </ul>
-                `,
-                product: `
-                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🎨 成果展現選項</h3>
-                    <ul class="list-disc list-inside space-y-1 ml-4">
-                        <li>完成實驗報告書，記錄實驗過程與結果。</li>
-                        <li>製作概念圖或心智圖，視覺化電與磁之間的關係與應用。</li>
-                        <li>自製教學影片：錄製一段簡短影片，向同學解釋電磁感應的原理。</li>
-                    </ul>
-                `,
-                environment: `
-                    <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🏠 空間佈置參考</h3>
-                    <ul class="list-disc list-inside space-y-1 ml-4">
-                        <li>設置「電路實驗區」，擺放實驗器材與安全規範提醒。</li>
-                        <li>牆面張貼科學家（如法拉第、安培）的介紹與電磁學發展的歷史圖。</li>
-                    </ul>
-                `
+            {
+                text: "學校推動一項新的行政要求，您認為不合理且會增加負擔，您會...",
+                options: [
+                    { text: "在會議上公開提出反對意見，並闡述這項要求可能帶來的負面影響。", style: "competing" },
+                    { text: "與其他同事討論，共同草擬一份替代方案，向行政單位提出，尋求雙贏。", style: "collaborating" },
+                    { text: "先試著做一部分，再跟主管反映執行上的困難，希望能減少一些工作量。", style: "compromising" },
+                    { text: "先觀望一下，看看其他人的反應，暫時不採取任何行動。", style: "avoiding" },
+                    { text: "雖然覺得不合理，但既然是規定，就還是盡力配合完成。", style: "accommodating" }
+                ]
+            },
+            {
+                text: "有學生上課屢次故意搗亂，影響課堂秩序，您會...",
+                options: [
+                    { text: "立即制止，並嚴格執行班規，給予明確的懲處，以儆效尤。", style: "competing" },
+                    { text: "課後找學生深談，試圖理解他行為背後的原因，並跟他一起想辦法解決他的困擾。", style: "collaborating" },
+                    { text: "跟學生約定，如果他有幾堂課能保持安靜，就給予獎勵作為交換。", style: "compromising" },
+                    { text: "有時候選擇暫時忽略他的小動作，只要不影響到主要教學流程就好。", style: "avoiding" },
+                    { text: "試著調整自己的上課方式，增加更多有趣的活動，希望能吸引他的注意力。", style: "accommodating" }
+                ]
+            },
+            {
+                text: "家長對您規劃的戶外教學地點有疑慮，認為不夠安全，您會...",
+                options: [
+                    { text: "拿出完整的安全評估報告，強調自己的專業規劃，請家長相信學校的安排。", style: "competing" },
+                    { text: "感謝家長的提醒，並邀請他加入籌備小組，一起勘查場地，完善安全計畫。", style: "collaborating" },
+                    { text: "為了讓大多數家長放心，更換到一個大家普遍認為更安全的備案地點。", style: "compromising" },
+                    { text: "在LINE群組中看到訊息，但想說等有更多人附和時再一起回覆。", style: "avoiding" },
+                    { text: "立刻向家長表示，既然他有疑慮，學校會優先考慮他的建議，並重新尋找地點。", style: "accommodating" }
+                ]
+            },
+            {
+                text: "您需要向學校申請一筆經費來充實班級圖書，但經費有限，您會...",
+                options: [
+                    { text: "盡力陳述班級閱讀的重要性，並與其他提案者競爭，力求爭取到全額經費。", style: "competing" },
+                    { text: "與其他也有需求的老師合作，提出一個可以資源共享的圖書計畫，讓總效益最大化。", style: "collaborating" },
+                    { text: "主動削減一些次要的書單，提出一個較低的經費需求，以提高過審的機會。", style: "compromising" },
+                    { text: "聽到經費很少，覺得申請過程太麻煩，可能就先暫緩這個計畫。", style: "avoiding" },
+                    { text: "看到其他老師比您更需要這筆錢，主動退出申請，把機會讓給別人。", style: "accommodating" }
+                ]
+            },
+            {
+                text: "一位同事經常向您抱怨工作，佔用您許多備課時間，您會...",
+                options: [
+                    { text: "直接告訴他：「不好意思，我現在需要專心備課，可能沒辦法聊這麼久。」", style: "competing" },
+                    { text: "同理他的辛苦，並提議：「不如我們約個午休時間，泡杯咖啡好好聊聊？」", style: "collaborating" },
+                    { text: "聽他說一會兒，然後找個藉口，例如「我得先去印個講義」，來縮短談話。", style: "compromising" },
+                    { text: "看到他走過來，就假裝很忙，戴上耳機，希望他不要來找你。", style: "avoiding" },
+                    { text: "覺得同事需要支持，放下手邊工作，專心聽他傾訴，即使自己的事會延後。", style: "accommodating" }
+                ]
+            },
+            {
+                text: "對於校慶佈置風格，您和其他老師的意見相左，您會...",
+                options: [
+                    { text: "堅持自己的美學和教育理念，並努力說服對方接受您的方案。", style: "competing" },
+                    { text: "提議一起上網找資料，融合雙方的想法，創造出一個獨一無二的全新風格。", style: "collaborating" },
+                    { text: "建議不同區域各自負責自己的區域，佈置成自己喜歡的樣子。", style: "compromising" },
+                    { text: "覺得這不是最重要的事，不想因此傷了和氣，就先不討論這個話題。", style: "avoiding" },
+                    { text: "認為和諧最重要，因此主動退讓，表示完全尊重搭班老師的想法。", style: "accommodating" }
+                ]
+            }
+        ];
+
+        const styleInfo = {
+            competing: { 
+                name: '競爭型 (貓頭鷹)', 
+                color: '#fbe9e7',
+                desc: '重視個人目標的達成，果斷且不畏懼對抗，像貓頭鷹一樣精準地朝目標前進。',
+                strength: '在需要快速決策、執行重要原則或保護學生權益時，這種風格非常有效率，能迅速穩定局面。',
+                blindspot: '在人際關係中，可能會因為過於堅持己見，而忽略他人感受，讓對方感到壓力或不被尊重。',
+                suggestion: '練習在堅持原則的同時，加入更多「我訊息」的表達，並適時傾聽對方的想法，讓決策更有溫度。'
+            },
+            collaborating: { 
+                name: '合作型 (海豚)', 
+                color: '#e3f2fd',
+                desc: '同時重視目標與關係，致力於尋找雙贏的創意解方，如同聰明合作的海豚，共創最大效益。',
+                strength: '能有效處理複雜問題，深化親師生間的信任感。透過整合多方觀點，能產出最有品質的決策。',
+                blindspot: '耗時耗力，並非所有衝突都值得投入如此高的心力。有時在小事上過度追求完美合作，反而會降低效率。',
+                suggestion: '學習判斷議題的重要性。將合作心力用在關鍵的、長期的議題上。在較緊急或次要的問題上，可嘗試「妥協」或「競爭」模式。'
+            },
+            compromising: { 
+                name: '妥協型 (狐狸)', 
+                color: '#fff8e1',
+                desc: '願意各退一步，尋求快速且雙方都能接受的折衷方案，像狐狸一樣務實且靈活。',
+                strength: '處理中度重要的議題時非常有效率，能快速解決僵局，讓事情繼續前進，是維持團隊運作的潤滑劑。',
+                blindspot: '有時妥協的結果並非「最好」的方案，只是「最不差」的。長期下來，可能導致雙方都沒有真正滿意。',
+                suggestion: '在尋求妥協時，多問一句：「這個方案，我們雙方真的都能接受嗎？或只是暫時應付？」確保妥協的品質。'
+            },
+            avoiding: { 
+                name: '迴避型 (烏龜)', 
+                color: '#f3e5f5',
+                desc: '選擇暫時不處理衝突，將自己縮進殼裡，以降低緊張關係或爭取思考時間。',
+                strength: '面對無關緊要的小事，或在情緒高度緊張的當下，暫時迴避是冷卻局勢的智慧，能避免說出後悔的話。',
+                blindspot: '若長期迴避重要問題，問題不僅不會消失，還可能惡化，並可能讓他人覺得您不在乎或缺乏擔當。',
+                suggestion: '練習區分「策略性迴避」與「習慣性逃避」。若選擇迴避，可以告訴自己：「我只是『現在』不處理，等我準備好，我會回頭面對它。」'
+            },
+            accommodating: { 
+                name: '適應型 (泰迪熊)', 
+                color: '#e6f4ea',
+                desc: '優先考慮對方需求與關係和諧，願意犧牲自己的目標，像溫暖的泰迪熊一樣，給予支持與安撫。',
+                strength: '當議題對對方遠比對自己重要時，或當您需要為關係「儲值」時，這是一種維持和諧的大度表現。',
+                blindspot: '長期忽略自身需求，可能會感到委屈或被利用。您的善意也可能被視為理所當然。',
+                suggestion: '在退讓的同時，練習溫和地表達自己的感受與底線。例如：「這次我可以配合你，但也希望下次能聽聽我的想法。」'
             }
         };
 
-        const fallbackPlan = {
-            content: `
-                <div class="p-6 bg-gray-50 border-l-4 border-gray-400 rounded-lg">
-                    <p class="text-sm italic text-gray-600">
-                        哎呀！我們目前還沒有針對這個主題的範例教案，但沒關係，這份工具的重點是激發靈感！您可以參考以下通用原則，將您的創意填入教案中喔！
-                    </p>
-                </div>
-            `,
-            process: `
-                <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🕹️ 過程差異化活動</h3>
-                <ul class="list-disc list-inside space-y-1 ml-4">
-                    <li>思考不同程度學生的學習方式，設計適合獨自作業、分組討論或動態體驗的活動。</li>
-                    <li>在教學活動中，給予學生選擇的機會，讓他們能主動參與。</li>
-                </ul>
-            `,
-            product: `
-                <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🎨 成果展現選項</h3>
-                <ul class="list-disc list-inside space-y-1 ml-4">
-                    <li>除了傳統的紙筆測驗，鼓勵學生用口頭報告、繪圖、或簡報來呈現學習成果。</li>
-                    <li>讓學生選擇他們最擅長的方式來表達，例如善於表達的學生可上台分享，喜歡寫作的學生可撰寫報告。</li>
-                </ul>
-            `,
-            environment: `
-                <h3 class="font-bold text-lg text-gray-800 mb-2 mt-4">🏠 空間佈置參考</h3>
-                <ul class="list-disc list-inside space-y-1 ml-4">
-                    <li>教室空間的調整能大幅影響學習氛圍，例如將桌椅排成小組討論形式、或設置安靜的個人閱讀區。</li>
-                    <li>善用牆面空間，展示學習海報或學生作品，讓教室成為一個充滿靈感的學習環境。</li>
-                </ul>
-            `
-        };
 
-        document.getElementById('lessonPlanForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            
-            const subject = document.getElementById('subject').value;
-            const grade = document.getElementById('grade').value;
-            const topic = document.getElementById('topic').value;
-            const time = document.getElementById('time').value;
-            const students = document.getElementById('students').value;
+        let currentQuestionIndex = 0;
+        let scores = { competing: 0, collaborating: 0, compromising: 0, avoiding: 0, accommodating: 0 };
 
-            const loadingDiv = document.getElementById('loading');
-            const resultDiv = document.getElementById('result');
-            const mainCard = document.getElementById('main-card');
-            const contentDiv = document.getElementById('lessonPlanContent');
-
-            loadingDiv.classList.remove('hidden');
-            resultDiv.classList.add('hidden');
-            
-            // 模擬 API 延遲
+        // --- Functions ---
+        function switchScreen(hide, show) {
+            hide.classList.remove('visible');
+            hide.classList.add('hidden');
             setTimeout(() => {
-                loadingDiv.classList.add('hidden');
-                resultDiv.classList.remove('hidden');
-                
-                const plan = generateLessonPlan(subject, grade, topic, time, students);
-                contentDiv.innerHTML = plan;
+                show.classList.remove('hidden');
+                show.classList.add('visible');
+                window.scrollTo(0, 0);
+            }, 300);
+        }
 
-                // 調整卡片大小以容納新內容
-                mainCard.style.maxWidth = '900px';
-            }, 1000);
+        function loadQuestion() {
+            if (currentQuestionIndex >= questions.length) {
+                showResults();
+                return;
+            }
+            const q = questions[currentQuestionIndex];
+            quizElements.progress.style.width = `${(currentQuestionIndex / questions.length) * 100}%`;
+            quizElements.qNumber.textContent = `問題 ${currentQuestionIndex + 1} / ${questions.length}`;
+            quizElements.qText.textContent = q.text;
+            quizElements.options.innerHTML = '';
+
+            q.options.forEach(option => {
+                const label = document.createElement('label');
+                label.className = 'option-label';
+                label.innerHTML = `
+                    <input type="radio" name="option" value="${option.style}">
+                    <span>${option.text}</span>
+                `;
+                quizElements.options.appendChild(label);
+            });
+            
+            // Add event listener to radio buttons
+            document.querySelectorAll('input[name="option"]').forEach(radio => {
+                radio.addEventListener('change', () => {
+                    buttons.next.disabled = false;
+                });
+            });
+            
+            buttons.next.disabled = true;
+            if(currentQuestionIndex === questions.length - 1) {
+                buttons.next.textContent = '完成測驗，查看結果';
+            } else {
+                buttons.next.textContent = '下一題';
+            }
+        }
+
+        function showResults() {
+            quizElements.progress.style.width = '100%';
+            
+            // Get sorted results
+            const sortedScores = Object.entries(scores).sort(([,a],[,b]) => b-a);
+            const primaryStyle = sortedScores[0][0];
+            const secondaryStyle = sortedScores[1][0];
+
+            resultsElements.summary.innerHTML = `
+                <p>您的主要衝突管理風格是</p>
+                <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">${styleInfo[primaryStyle].name}</h2>
+                <p>其次是 <strong>${styleInfo[secondaryStyle].name}</strong> 風格</p>
+                <p>這代表在面對衝突時，您最傾向於運用「${styles[primaryStyle]}」的策略來應對。以下是您的個人風格雷達圖與深度解析：</p>
+            `;
+
+            // Render Chart
+            renderChart();
+            
+            // Build Accordion
+            buildAccordion();
+            
+            switchScreen(screens.quiz, screens.results);
+        }
+
+        function renderChart() {
+            const ctx = resultsElements.chartCanvas.getContext('2d');
+            const data = {
+                labels: Object.values(styles),
+                datasets: [{
+                    label: '風格傾向分數',
+                    data: Object.values(scores),
+                    fill: true,
+                    backgroundColor: 'rgba(74, 144, 226, 0.2)',
+                    borderColor: 'rgb(74, 144, 226)',
+                    pointBackgroundColor: 'rgb(74, 144, 226)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgb(74, 144, 226)'
+                }]
+            };
+
+            if (myChart) {
+                myChart.destroy();
+            }
+
+            myChart = new Chart(ctx, {
+                type: 'radar',
+                data: data,
+                options: {
+                    elements: {
+                        line: {
+                            borderWidth: 3
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: false
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: Math.max(...Object.values(scores), 4),
+                            pointLabels: {
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function buildAccordion() {
+            resultsElements.accordion.innerHTML = '';
+            Object.keys(styleInfo).forEach(key => {
+                const info = styleInfo[key];
+                const item = document.createElement('div');
+                item.className = 'accordion-item';
+                item.innerHTML = `
+                    <div class="accordion-header" style="background-color: ${info.color};">
+                        ${info.name}
+                    </div>
+                    <div class="accordion-content">
+                        <p><strong>風格描述：</strong>${info.desc}</p>
+                        <p><strong>在教學現場的優勢：</strong>${info.strength}</p>
+                        <p><strong>需要留意的盲點：</strong>${info.blindspot}</p>
+                        <p><strong>給您的行動建議：</strong>${info.suggestion}</p>
+                    </div>
+                `;
+                resultsElements.accordion.appendChild(item);
+            });
+
+            // Accordion functionality
+            document.querySelectorAll('.accordion-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const item = header.parentElement;
+                    const content = header.nextElementSibling;
+                    
+                    if (item.classList.contains('active')) {
+                        item.classList.remove('active');
+                        content.style.maxHeight = null;
+                    } else {
+                        // Close other items if you want only one open at a time
+                        // document.querySelectorAll('.accordion-item.active').forEach(activeItem => {
+                        //     activeItem.classList.remove('active');
+                        //     activeItem.querySelector('.accordion-content').style.maxHeight = null;
+                        // });
+                        item.classList.add('active');
+                        content.style.maxHeight = content.scrollHeight + "px";
+                    }
+                });
+            });
+        }
+        
+        // --- Event Listeners ---
+        buttons.start.addEventListener('click', () => {
+            switchScreen(screens.welcome, screens.quiz);
+            loadQuestion();
         });
 
-        function generateLessonPlan(subject, grade) {
-            const key = `${subject}_${grade}`;
-            const plan = lessonPlans[key] || fallbackPlan;
-            return `
-                <div class="space-y-6">
-                    ${plan.content}
-                    ${plan.process}
-                    ${plan.product}
-                    ${plan.environment}
-                </div>
-            `;
-        }
-
-        function copyToClipboard() {
-            const content = document.getElementById('lessonPlanContent').innerText;
-            if (content) {
-                // Check if the browser supports the new clipboard API
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(content).then(() => {
-                        showCopyMessage();
-                    }).catch(err => {
-                        console.error('無法複製內容: ', err);
-                        fallbackCopyText(content);
-                    });
-                } else {
-                    fallbackCopyText(content);
-                }
+        buttons.next.addEventListener('click', () => {
+            const selected = document.querySelector('input[name="option"]:checked');
+            if (selected) {
+                scores[selected.value]++;
+                currentQuestionIndex++;
+                loadQuestion();
             }
-        }
+        });
+        
+        buttons.restart.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            scores = { competing: 0, collaborating: 0, compromising: 0, avoiding: 0, accommodating: 0 };
+            switchScreen(screens.results, screens.welcome);
+        });
 
-        function fallbackCopyText(text) {
-            const tempTextArea = document.createElement('textarea');
-            tempTextArea.value = text;
-            document.body.appendChild(tempTextArea);
-            tempTextArea.select();
-            try {
-                document.execCommand('copy');
-                showCopyMessage();
-            } catch (err) {
-                console.error('Fallback: 無法複製內容', err);
-            }
-            document.body.removeChild(tempTextArea);
-        }
+        buttons.download.addEventListener('click', () => {
+            const content = document.getElementById('results-content-to-download');
+            buttons.download.textContent = '圖片產生中...';
+            buttons.download.disabled = true;
 
-        function showCopyMessage() {
-            const msg = document.getElementById('copy-message');
-            msg.classList.remove('hidden');
-            setTimeout(() => {
-                msg.classList.add('hidden');
-            }, 2000);
-        }
-
-        function resetForm() {
-            document.getElementById('lessonPlanForm').reset();
-            document.getElementById('result').classList.add('hidden');
-            document.getElementById('main-card').style.maxWidth = '768px';
-        }
-
-        document.getElementById('topic').focus();
-
+            html2canvas(content, { 
+                scale: 2, 
+                useCORS: true,
+                backgroundColor: getComputedStyle(document.body).backgroundColor
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = '翻轉教育_我的衝突管理風格分析.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }).catch(err => {
+                console.error("下載失敗:", err);
+                alert("圖片產生失敗，請稍後再試。");
+            }).finally(() => {
+                buttons.download.textContent = '下載我的風格分析圖';
+                buttons.download.disabled = false;
+            });
+        });
+    });
     </script>
 </body>
 </html>
-
