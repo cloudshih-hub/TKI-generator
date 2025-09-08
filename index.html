@@ -35,19 +35,20 @@
             font-family: 'Noto Sans TC', sans-serif;
             background-color: var(--background-color);
             margin: 0;
-            padding: 1rem;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
+            /* 移除 body 的 padding 以解決在部分瀏覽器上可能出現的滾輪問題 */
+            padding: 0; 
             color: var(--text-color);
             -webkit-font-smoothing: antialiased;
-            /* 移除 min-height: 100vh; 以允許內容決定高度 */
             min-height: auto;
+            /* 移除 flex 佈局，改由 container 的 margin:auto 實現置中 */
         }
 
         .tool-container {
             width: 100%;
             max-width: 500px;
+            /* 使用 margin 來為內容提供外邊距，並實現水平置中 */
+            margin: 1rem auto;
+            box-sizing: border-box;
         }
 
         .tool-card {
